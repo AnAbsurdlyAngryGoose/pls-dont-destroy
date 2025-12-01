@@ -1,0 +1,122 @@
+{
+    "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+    "name": "plsdontdestroy",
+    "server": {
+        "dir": "dist/server",
+        "entry": "main.cjs"
+    },
+    "triggers": {
+        "onCommentCreate": "/internal/triggers/comment-create",
+        "onCommentDelete": "/internal/triggers/comment-delete",
+        "onPostCreate": "/internal/triggers/post-create",
+        "onPostDelete": "/internal/triggers/post-delete"
+    },
+    "scheduler": {
+        "tasks": {
+            "cleanupData": {
+                "endpoint": "/internal/tasks/cleanup-data",
+                "cron": "0 * * * *"
+            },
+            "checkForUpdates": {
+                "endpoint": "/internal/tasks/check-for-updates",
+                "cron": "0 */12 * * *"
+            }
+        }
+    },
+    "permissions": {
+        "http": {
+            "enable": false
+        },
+        "media": false,
+        "payments": false,
+        "realtime": false,
+        "redis": true,
+        "reddit": {
+            "enable": true,
+            "scope": "user"
+        }
+    },
+    "settings": {
+        "subreddit": {
+            "blackholeRemovalReason": {
+                "type": "string",
+                "label": "Removal Reason for Mod Notes (UUID)",
+                "helpText": "The reason that will be added to mod notes when a post is removed as a blackhole.",
+                "validationEndpoint": "/internal/validations/is-uuid"
+            },
+            "notificationThreshold": {
+                "type": "number",
+                "label": "Threshold for Notification",
+                "helpText": "The number of times a user can delete a removed submission before a notification is sent to them. If set to 0, the user will be notified each time they delete a removed submission until they reach the threshold for a temporary ban, permanent ban, or blackhole (if enforced).",
+                "defaultValue": 2,
+                "validationEndpoint": "/internal/validations/is-natural-number"
+            },
+            "notificationTemplate": {
+                "type": "paragraph",
+                "label": "Notification Message",
+                "helpText": "The message that will be sent to the user when they reach the notification threshold. You can use {{subreddit}} and {{username}} to personalise the message.",
+                "defaultValue": "Hello u/{{username}},\n\nWe noticed that you have deleted a submission in r/{{subreddit}} that was removed by our moderators. Deleting your submissions after we've removed them prevents us from effectively helping you later, and interferes with our moderation. Please be aware that continued deletion of removed submissions may lead to a temporary or permanent ban from r/{{subreddit}}.\n\nThank you for understanding.",
+                "validationEndpoint": "/internal/validations/check-substitutions"
+            },
+            "temporaryBanThreshold": {
+                "type": "number",
+                "label": "Threshold for Temporary Ban",
+                "helpText": "The number of times a user can delete a removed submission before they are temporarily banned. Temporary bans are issued starting at this threshold and for all subsequent deletions prior to meeting the threshold for a permanent ban or blackhole. If set to 0, temporary bans will not be issued.",
+                "defaultValue": 3,
+                "validationEndpoint": "/internal/validations/is-natural-number"
+            },
+            "temporaryBanDuration": {
+                "type": "number",
+                "label": "Temporary Ban Duration in Days",
+                "helpText": "The duration of the temporary ban in days. If the threshold for temporary bans is 0, this setting is ignored.",
+                "defaultValue": 3,
+                "validationEndpoint": "/internal/validations/is-natural-number"
+            },
+            "temporaryBanTemplate": {
+                "type": "paragraph",
+                "label": "Temporary Ban Message",
+                "helpText": "The message that will be sent to the user when they are temporarily banned. You can use {{subreddit}} and {{username}} to personalise the message.",
+                "defaultValue": "Hello u/{{username}},\n\nYou have been temporarily banned from r/{{subreddit}} due to repeated deletion of removed submissions. Please adhere to the subreddit rules to avoid further action.\n\nThank you for understanding.",
+                "validationEndpoint": "/internal/validations/check-substitutions"
+            },
+            "permanentBanThreshold": {
+                "type": "number",
+                "label": "Threshold for Permanent Ban",
+                "helpText": "The number of times a user can delete a removed submission before they are permanently banned. If set to 0, permanent bans will not be issued. This value should be greater than the threshold for temporary bans.",
+                "defaultValue": 0,
+                "validationEndpoint": "/internal/validations/is-natural-number"
+            },
+            "permanentBanTemplate": {
+                "type": "paragraph",
+                "label": "Permanent Ban Message",
+                "helpText": "The message that will be sent to the user when they are permanently banned. You can use {{subreddit}} and {{username}} to personalise the message.",
+                "defaultValue": "Hello u/{{username}},\n\nYou have been permanently banned from r/{{subreddit}} due to repeated deletion of removed submissions.\n\nThank you for understanding.",
+                "validationEndpoint": "/internal/validations/check-substitutions"
+            },
+            "blackholeThreshold": {
+                "type": "number",
+                "label": "Threshold for Silent Filtering (\"Bot Ban\")",
+                "helpText": "The number of times a user can delete a removed submission before all subsequent submissions are automatically, silently removed. If set to 0, filtering will not be enforced. If the threshold for permanent bans is greater than zero, this setting is ignored.",
+                "defaultValue": 5,
+                "validationEndpoint": "/internal/validations/is-natural-number"
+            },
+            "receiveUpdateNotifications": {
+                "type": "multiSelect",
+                "label": "Receive Update Notifications",
+                "helpText": "Select the types of updates you would like to be notified about.",
+                "options": [
+                    { "label": "Major Upgrades", "value": "major" },
+                    { "label": "Feature Updates", "value": "minor" },
+                    { "label": "Bug Fixes", "value": "patch" }
+                ],
+                "defaultValue": [ "major", "minor", "patch" ]
+            }
+        }
+    },
+    "dev": {
+        "subreddit": "absurdlyangryhonking"
+    },
+    "marketingAssets": {
+        "icon": "assets/icon.png"
+    }
+}
