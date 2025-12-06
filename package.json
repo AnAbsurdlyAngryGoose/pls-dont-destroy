@@ -7,7 +7,7 @@
   "scripts": {
     "login": "devvit login",
     "type-check": "tsc --build --noEmit",
-    "build": "npx vite build",
+    "build": "pushd src/server && npx vite build && popd",
     "test": "npx vitest run --passWithNoTests",
     "playtest": "devvit playtest",
     "deploy": "devvit upload",
