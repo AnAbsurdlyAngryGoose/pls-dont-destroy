@@ -1,5 +1,5 @@
 export type HttpResponse = {
-    status: number,
+    status: Code,
     message: string
 };
 
@@ -16,4 +16,12 @@ export enum Release {
     minor = "minor",
     patch = "patch",
     critical = "critical" // patches that address critical issues
+};
+
+export enum Code {
+    ok = 200,
+    badRequest = 400,
+    notFoundOrInaccessible = 404,
+    error = 500,
+    unsupported = 501
 };

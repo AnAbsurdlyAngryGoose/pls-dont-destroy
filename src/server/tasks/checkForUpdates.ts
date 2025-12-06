@@ -2,9 +2,10 @@ import { context, reddit, redis, WikiPage } from "@devvit/web/server";
 import { Request, Response } from "express";
 import { clean, gte } from "semver";
 import { bold, p, sub, ul } from "ts-markdown";
-import { Release } from "../types.js";
+import { Code, Release } from "../types.js";
 import { markdown } from "../markdown.js";
 import { configuration } from "../configuration.js";
+import { respond } from "../utilities.js";
 
 type ReleaseNote = {
     semver: string;
@@ -30,7 +31,7 @@ export const checkForUpdates = async (_: Request, response: Response) => {
     // playtest builds use x.y.z.n
     const current = clean(context.appVersion);
     if (!current) {
-        return response.status(200).send({ message: `routine not run during playtest` });
+        return respond(response, Code.ok, `routine not run during playtest`);
     }
 
     const slug = `${root}/${context.appName}`;
@@ -38,7 +39,7 @@ export const checkForUpdates = async (_: Request, response: Response) => {
     try {
         document = await reddit.getWikiPage(domain, slug);
     } catch {
-        return response.status(404).send({ message: `${domain}/${slug} not found or inaccessible` });
+        return respond(response, Code.notFoundOrInaccessible, `${domain}/${slug} not found or inaccessible`);
     }
 
     const { semver, cycle, news } = JSON.parse(document.content) as ReleaseNote;
@@ -46,25 +47,25 @@ export const checkForUpdates = async (_: Request, response: Response) => {
     // check if we're actually going to notify about an upgrade
     const config = await configuration();
     if (!config.sendUpdateNotifications(cycle)) {
-        return response.status(200).send({ message: `configured to skip ${cycle} notifications` });
+        return respond(response, Code.ok, `configured to skip ${cycle} notifications`);
     }
 
     // triple check that the upgrade data is well formed
     const future = clean(semver);
     if (!future) {
-        return response.status(500).send({ message: `version ${semver} is not semantic` });
+        return respond(response, Code.error, `version ${semver} is not semantic`);
     }
 
     // check if we've already notified about this version
     const seen = await redis.get(`latest-version`) === future;
     if (seen) {
-        return response.status(200).send({ message: `already notified` });
+        return respond(response, Code.ok, `already notified`);
     }
 
     // if the current version is greater than or equal to the upgrade version, we're up to date
     const fresh = gte(current, future);
     if (fresh) {
-        return response.status(200).send({ message: `up to date` });
+        return respond(response, Code.ok, `up to date`);
     }
 
     // note that this may differ from the cycle declared in the release notes
@@ -88,6 +89,6 @@ export const checkForUpdates = async (_: Request, response: Response) => {
     });
 
     await redis.set(`latest-version`, future);
-    return response.status(200).send({ message: `sent notification ${notification}` });
+    return respond(response, Code.ok, `sent notification ${notification}`);
 };
     

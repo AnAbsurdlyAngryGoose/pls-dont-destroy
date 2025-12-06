@@ -1,6 +1,8 @@
 import { context, reddit, redis, User } from "@devvit/web/server";
 import { Request, Response } from "express";
 import { later, now } from "../chronology.js";
+import { respond } from "../utilities.js";
+import { Code } from "../types.js";
 
 const userIsActive = async (username: string): Promise<boolean> => {
     let user: User | undefined;
@@ -37,7 +39,7 @@ export const cleanupData = async (_: Request, response: Response) => {
 
     // bail early if nothing to do
     if (!status.length) {
-        return response.status(200).send({ message: `no users to process` });
+        return respond(response, Code.ok, `expiring=0; refreshed=0; cleared=0`);
     }
 
     // refresh expiry for active users
@@ -54,7 +56,7 @@ export const cleanupData = async (_: Request, response: Response) => {
     // likewise, if nothing to expire, bail early
     const expired = status.filter(s => !s.active).map(({ member }) => member);
     if (!expired.length) {
-        return response.status(200).send({ message: `no users to expire` });
+        return respond(response, Code.ok, `expiring=${expiring.length}; refreshed=${refresh.length}; cleared=0`);
     }
 
     // generate the key sets
@@ -62,6 +64,5 @@ export const cleanupData = async (_: Request, response: Response) => {
     await redis.del(...data);
     await redis.zRem('monitored', expired);
 
-    console.debug('cleanupUsers', `expiring=${expiring.length}; refreshed=${refresh.length}; cleared=${expired.length}`);
-    return response.status(200).send({ message: `cleaned up ${expiring.length} users.`});
+    return respond(response, Code.ok, `expiring=${expiring.length}; refreshed=${refresh.length}; cleared=${expired.length}`);
 };
