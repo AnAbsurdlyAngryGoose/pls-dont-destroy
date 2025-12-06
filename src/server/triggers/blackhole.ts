@@ -4,7 +4,7 @@ import { Code, HttpResponse, Threshold } from "../types.js";
 import { configuration } from "../configuration.js";
 
 export const blackhole = async (tx: T1 | T3, username: string): Promise<HttpResponse> => {
-    const deletions = Number(await redis.hGet(username, 'deleted') || 0);
+    const deletions = Number(await redis.hGet(`${username}:stats`, 'deleted') || 0);
     const config = await configuration();
     if (config.thresholdMet(deletions) !== Threshold.blackhole) {
         return { status: Code.ok, message: 'blackholes are not enabled, or the user has not met the threshold yet' };
