@@ -24,6 +24,6 @@ export const respond = (response: Response, code: Code, message?: string) => {
     const status = StatusData[code];
     const payload = message ? { ...status, message } : status;
 
-    console.log('respond', status.status, message ?? '');
+    console.log('responding', status.status, message ?? '');
     return response.status(status.code).send(payload);
 };
