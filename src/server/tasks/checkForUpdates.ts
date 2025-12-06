@@ -81,7 +81,7 @@ export const checkForUpdates = async (_: Request, response: Response) => {
             p(brief.replace(your_version, current).replace(new_version, future)),
             p(release[cycle]),
             p(whats_new.replace(new_version, future)),
-            ul(news.map(x => p(x))),
+            ul(news),
             p("Thank you for using Please Don't Destroy!"),
             sub("You're receiving this notification because your subreddit has Please Don't Destroy installed and has opted-in for update notifications."),
         ])

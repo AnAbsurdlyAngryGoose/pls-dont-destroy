@@ -35,18 +35,30 @@ export const cleanupData = async (_: Request, response: Response) => {
         return { member, active };
     }));
 
+    // bail early if nothing to do
+    if (!status.length) {
+        return response.status(200).send({ message: `no users to process` });
+    }
+
     // refresh expiry for active users
     const refresh = status.filter(s => s.active).map(({ member }) => ({
         member,
         score: later({ days: 1 }),
     }));
-    await redis.zAdd('monitored', ...refresh);
+
+    // attempting to zadd nothing is an error
+    if (refresh.length) {
+        await redis.zAdd('monitored', ...refresh);
+    }
+
+    // likewise, if nothing to expire, bail early
+    const expired = status.filter(s => !s.active).map(({ member }) => member);
+    if (!expired.length) {
+        return response.status(200).send({ message: `no users to expire` });
+    }
 
     // generate the key sets
-    const expired = status.filter(s => !s.active).map(({ member }) => member);
     const data = expired.flatMap(m => [m, `${m}:things`, `${m}:stats`]);
-
-    // cleanup
     await redis.del(...data);
     await redis.zRem('monitored', expired);
 
