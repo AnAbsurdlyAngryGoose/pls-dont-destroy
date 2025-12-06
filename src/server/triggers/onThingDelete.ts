@@ -1,6 +1,6 @@
 import { EventSource, T1, T3 } from "@devvit/web/shared";
 import { reddit, redis } from "@devvit/web/server";
-import { HttpResponse } from "../types.js";
+import { HttpResponse, Threshold } from "../types.js";
 import { laterDate, updateLastSeen } from "../chronology.js";
 import { configuration } from "../configuration.js";
 
@@ -46,49 +46,42 @@ export const onThingDeletedByUser = async (thing: T1 | T3, body: ThingDeleteRequ
     console.debug(`user ${body.author.name} has deleted ${count} submission(s) that were previously moderated`);
     const config = await configuration();
 
-    // if enabled and the threshold is met, action a permanent ban
-    const permaban = config.permanentBanThreshold > 0 && count >= config.permanentBanThreshold;
-    if (permaban) {
-        await reddit.banUser({
-            username: body.author.name,
-            subredditName: body.subreddit.name,
-            message: config.permanentBanMessage,
-            reason: config.blackholeRemovalReason,
-        });
-    
-        console.debug(`permanently banned user ${body.author.name} from subreddit ${body.subreddit.name}`);
-        return { status: 200, message: 'permaban issued' };
-    }
-
-    // if enabled and the threshold is met, action a temporary ban
-    const tempban = config.temporaryBanThreshold > 0 && count >= config.temporaryBanThreshold;
-    if (tempban) {
-        await reddit.banUser({
-            username: body.author.name,
-            subredditName: body.subreddit.name,
-            message: config.temporaryBanMessage,
-            reason: config.blackholeRemovalReason,
-            duration: config.temporaryBanDuration,
-        });
-    
-        console.debug(`temporarily banned user ${body.author.name} from subreddit ${body.subreddit.name}`);
-        return { status: 200, message: 'tempban issued' };
-    }
-
-    // notify the user if the threshold is met and no other action was taken
-    // nb that a threshold of 0 means "notify on every deletion"
-    const notify = config.notificationThreshold === 0 || count === config.notificationThreshold;
-    if (notify) {
-        await reddit.sendPrivateMessage({
-            to: body.author.name,
-            subject: 'Notice of Comment Deletion',
-            text: config.notificationMessage
-        });
-
-        return { status: 200, message: 'notification sent' };
-    }
-
-    return { status: 200, message: 'nothing to do' };
+    const threshold = config.thresholdMet(count);
+    switch (threshold) {
+        case Threshold.none:
+            console.debug(`user ${body.author.name} has not met any thresholds for deleted submissions`);
+            return { status: 200, message: 'nothing to do' };
+        case Threshold.notify:
+            console.log(`user ${body.author.name} has met the notification threshold for deleted submissions`);
+            await reddit.sendPrivateMessage({
+                to: body.author.name,
+                subject: 'Notice of Comment Deletion',
+                text: config.notificationMessage
+            });
+            return { status: 200, message: 'notification sent' };
+        case Threshold.tempban:
+            console.log(`user ${body.author.name} has met the temporary ban threshold for deleted submissions`);
+            await reddit.banUser({
+                username: body.author.name,
+                subredditName: body.subreddit.name,
+                message: config.temporaryBanMessage,
+                reason: config.blackholeRemovalReason,
+                duration: config.temporaryBanDuration,
+            });
+            return { status: 200, message: 'tempban issued' };
+        case Threshold.permaban:
+            console.log(`user ${body.author.name} has met the permanent ban threshold for deleted submissions`);
+            await reddit.banUser({
+                username: body.author.name,
+                subredditName: body.subreddit.name,
+                message: config.permanentBanMessage,
+                reason: config.blackholeRemovalReason,
+            });
+            return { status: 200, message: 'permaban issued' };
+        case Threshold.blackhole:
+            console.log(`user ${body.author.name} has met the blackhole threshold for deleted submissions`);
+            return { status: 200, message: 'blackholed user, no further action' };
+    };
 };
 
 export const onThingRemovedByModerator = async (thing: T1 | T3, body: ThingDeleteRequestBody): Promise<HttpResponse> => {
