@@ -15,11 +15,11 @@
         "tasks": {
             "cleanupData": {
                 "endpoint": "/internal/tasks/cleanup-data",
-                "cron": "0 * * * *"
+                "cron": "*/5 * * * *"
             },
             "checkForUpdates": {
                 "endpoint": "/internal/tasks/check-for-updates",
-                "cron": "0 */12 * * *"
+                "cron": "*/5 * * * *"
             }
         }
     },
