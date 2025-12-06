@@ -1,7 +1,7 @@
 import { context, reddit, redis, WikiPage } from "@devvit/web/server";
 import { Request, Response } from "express";
 import { clean, gte } from "semver";
-import { bold, p, sub, ul } from "ts-markdown";
+import { bold, p, sup, ul } from "ts-markdown";
 import { Code, Release } from "../types.js";
 import { markdown } from "../markdown.js";
 import { configuration } from "../configuration.js";
@@ -21,10 +21,10 @@ const subject = `[ App Upgrade ] Please Don't Destroy ${new_version} is now avai
 const brief = `A new version of the Please Don't Destroy is now available. Your subreddit is currently using version ${your_version}. This release introduces version ${new_version}, which includes new features, enhancements, and fixes described in the sections below.`;
 const whats_new = `Here's what's new in version ${new_version}:`;
 const release = {
-    [Release.major]: p(["This is a", bold("major"), "release introducing significant new features, architectural enhancements, and compatibility updates. It may include breaking changes and requires careful review of the upgrade notes before deployment."]),
-    [Release.minor]: p(["This is a", bold("minor"), "release delivering incremental improvements, feature enhancements, and user-experience updates. It is fully backward-compatible and recommended for all customers seeking the latest functionality."]),
-    [Release.patch]: p(["This is a", bold("patch"), "release including targeted fixes that address defects, security issues, and/or performance optimisations. To avoid service interruptions, it is recommended to apply this update promptly."]),
-    [Release.critical]: p(["This is a", bold("critical patch"), "release that addresses urgent issues impacting security, stability, or compliance. It is strongly advised to implement this update immediately to mitigate potential risk."])
+    [Release.major]: p(["This is a", bold(" major "), "release introducing significant new features, architectural enhancements, and compatibility updates. It may include breaking changes and requires careful review of the upgrade notes before deployment."]),
+    [Release.minor]: p(["This is a", bold(" minor "), "release delivering incremental improvements, feature enhancements, and user-experience updates. It is fully backward-compatible and recommended for all customers seeking the latest functionality."]),
+    [Release.patch]: p(["This is a", bold(" patch "), "release including targeted fixes that address defects, security issues, and/or performance optimisations. To avoid service interruptions, it is recommended to apply this update promptly."]),
+    [Release.critical]: p(["This is a", bold(" critical patch "), "release that addresses urgent issues impacting security, stability, or compliance. It is strongly advised to implement this update immediately to mitigate potential risk."])
 };
 
 export const checkForUpdates = async (_: Request, response: Response) => {
@@ -85,7 +85,7 @@ export const checkForUpdates = async (_: Request, response: Response) => {
             p(whats_new.replace(new_version, future)),
             ul(news),
             p("Thank you for using Please Don't Destroy!"),
-            sub("You're receiving this notification because your subreddit has Please Don't Destroy installed and has opted-in for update notifications."),
+            sup("You're receiving this notification because your subreddit has Please Don't Destroy installed and has opted-in for update notifications."),
         ])
     });
 
