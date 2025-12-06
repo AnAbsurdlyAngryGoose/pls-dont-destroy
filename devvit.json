@@ -37,6 +37,13 @@
         }
     },
     "settings": {
+        "global": {
+            "doNotDestroy": {
+                "type": "string",
+                "label": "Dry-Run Operation Only",
+                "isSecret": true
+            }
+        },
         "subreddit": {
             "blackholeRemovalReason": {
                 "type": "string",

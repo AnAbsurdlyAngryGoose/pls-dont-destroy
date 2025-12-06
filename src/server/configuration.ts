@@ -53,6 +53,10 @@ class Configuration {
         return this.values['receiveUpdateNotifications'] as Release[];
     }
 
+    get doNotDestroy(): string {
+        return String(this.values['doNotDestroy'] || '');
+    };
+
     /**
      * Derived values
      */
@@ -117,6 +121,19 @@ class Configuration {
     sendUpdateNotifications(...categories: Release[]): boolean {
         return categories.includes(Release.critical) ||
                intersection(categories, this.selectedUpdateCategories).length > 0;
+    };
+
+    /** 
+     * for testing purposes, plsdontdestroy can be set to "dry-run" mode
+     * by specifying a subreddit name (or comma-separated list of names) in the
+     * doNotDestroy setting. in this mode, no destructive actions (bans, blackholes)
+     * will be performed. i may later add a (separate) subreddit-local killswitch, too.
+     */
+    get doNotDestroyMode(): boolean {
+        return this.doNotDestroy
+            .split(',')
+            .map(s => s.trim().toLowerCase())
+            .includes(context.subredditName.toLowerCase());
     };
 
     /** internal methods */
