@@ -44,6 +44,13 @@ export const checkForUpdates = async (_: Request, response: Response) => {
 
     const { semver, cycle, news } = JSON.parse(document.content) as ReleaseNote;
 
+    // check if we've already notified about this version
+    const seen = await redis.get(`latest-version`) === semver;
+    if (seen) {
+        return respond(response, Code.ok, `already notified`);
+    }
+    await redis.set(`latest-version`, semver);
+
     // check if we're actually going to notify about an upgrade
     const config = await configuration();
     if (!config.sendUpdateNotifications(cycle)) {
@@ -54,12 +61,6 @@ export const checkForUpdates = async (_: Request, response: Response) => {
     const future = clean(semver);
     if (!future) {
         return respond(response, Code.error, `version ${semver} is not semantic`);
-    }
-
-    // check if we've already notified about this version
-    const seen = await redis.get(`latest-version`) === future;
-    if (seen) {
-        return respond(response, Code.ok, `already notified`);
     }
 
     // if the current version is greater than or equal to the upgrade version, we're up to date
@@ -88,7 +89,6 @@ export const checkForUpdates = async (_: Request, response: Response) => {
         ])
     });
 
-    await redis.set(`latest-version`, future);
     return respond(response, Code.ok, `sent notification ${notification}`);
 };
     

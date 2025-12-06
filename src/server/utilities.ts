@@ -13,10 +13,10 @@ export const panic = (message: string): never => {
 
 const StatusData = {
     [Code.ok]: { status: 'ok', code: 200 },
-    [Code.badRequest]: { status: 'received malformed event data', code: 400 },
-    [Code.notFoundOrInaccessible]: { status: 'data not found or inaccessible', code: 404 },
-    [Code.error]: { status: 'application error', code: 500 },
-    [Code.unsupported]: { status: 'unsupported operation', code: 501 }
+    [Code.badRequest]: { status: 'received malformed event data', code: 200 },
+    [Code.notFoundOrInaccessible]: { status: 'data not found or inaccessible', code: 200 },
+    [Code.error]: { status: 'application error', code: 200 },
+    [Code.unsupported]: { status: 'unsupported operation', code: 200 }
 } as const;
 
 /** helper method encapsulating the log-respond pattern */
